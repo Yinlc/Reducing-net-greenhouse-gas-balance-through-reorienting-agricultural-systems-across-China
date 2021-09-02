@@ -1,0 +1,234 @@
+% matlab code
+% Created by Yinlichang
+% Code for the optimization at prefecture level
+clear
+xl=[1:6 8:340 342:359]; % Prefecture ID
+kal_xs=[5600 6140 6900 6360 3340 3560 3560 3340 2800 4940 4940 3350 4140 0 2460 300 700]'; % FAO的卡路里系数
+for i=1:length(xl)
+     xlz=xl(i);
+     filename=['I:\crop optimi\Prefecture\',int2str(xlz),'_city.csv']; 
+     data_all=csvread(filename);
+    if length(find(isnan(data_all)))==0
+        cropland_total_area=sum(data_all(:,3));
+        sow_area=data_all(:,3);
+        
+        ka_u=data_all(:,4).*kal_xs;% 
+       
+        kal_oil=[0 0 0 0 0 0 0 0 0 ka_u(10:13)' 0 0 0 0]; % total kal for oil
+        kal_oil_sum=sum(kal_oil'.*sow_area);
+        
+        yield_tobacco=[zeros(1,13),1,0,0,0]'; %
+        yield_tobacco=yield_tobacco.*data_all(:,4); % 单产
+        tobacco_yield_sum=sum(yield_tobacco.*sow_area);
+        
+        yield_cotton=[zeros(1,14),1,0,0]'; % 
+        yield_cotton=yield_cotton.*data_all(:,4);
+        cotton_yield_sum=sum(yield_cotton.*sow_area);
+
+        
+        kal_sugar=[zeros(1,15),ka_u(16:17)'];% 
+        kal_sugar_sum=sum(kal_sugar'.*sow_area);
+
+        money_u=data_all(:,9);%  unit economic benefits
+        money_all=sum(data_all(:,3).*money_u);
+
+        ir_u=data_all(:,10); % unit irrigation  water consumption
+        irrigation_all=sum(data_all(:,3).*ir_u);
+
+        yieldz1=data_all(:,4);
+        yieldz2=data_all(:,5);
+        yieldz3=data_all(:,6);
+        pro_xs=[yieldz1(1)*kal_xs(1) yieldz1(2)*kal_xs(1) yieldz2(3)*kal_xs(5) yieldz3(4)*kal_xs(9) yieldz1(5)*kal_xs(5) 0 0 yieldz1(8)*kal_xs(8) yieldz1(9)*kal_xs(9) ...
+            0 0 0 0 0 0 0 0]'; %
+        production=sum(pro_xs.*sow_area);% 
+
+        ngb_u=data_all(:,14); % NGB
+        ngb_all=sum(data_all(:,3).*ngb_u); % 
+
+        GHG_u=data_all(:,7); % NGB
+        GHG_all=sum(data_all(:,3).*GHG_u); % 
+        
+
+        cz_kal_oil_sum=[];
+        for kk=1:17
+            kal_oil_1=kal_oil(kk);
+            for kkk=1:17
+                kal_oil_2=kal_oil(kkk);
+                cz_kal_oil=kal_oil_2-kal_oil_1;
+                cz_kal_oil_sum=[cz_kal_oil_sum;cz_kal_oil];
+            end
+        end
+
+        cz_kal_sugar_sum=[];
+        for kk=1:17
+            kal_sugar_1=kal_sugar(kk);
+            for kkk=1:17
+                kal_sugar_2=kal_sugar(kkk);
+                cz_kal_sugar=kal_sugar_2-kal_sugar_1;
+                cz_kal_sugar_sum=[cz_kal_sugar_sum;cz_kal_sugar];
+            end
+        end
+
+         cz_pro_xs_sum=[];
+        for kk=1:17
+            production_xs_1=pro_xs(kk);
+            for kkk=1:17
+                production_xs_2=pro_xs(kkk);
+                cz_production_xs=production_xs_2-production_xs_1;
+                cz_pro_xs_sum=[cz_pro_xs_sum;cz_production_xs];
+            end
+        end
+
+        cz_ir_u_sum=[];
+        for kk=1:17
+            ir_u_1=ir_u(kk);
+            for kkk=1:17
+                ir_u_2=ir_u(kkk);
+                cz_ir_u=ir_u_2-ir_u_1;
+                cz_ir_u_sum=[cz_ir_u_sum;cz_ir_u];
+            end
+        end
+
+         cz_money_u_sum=[];
+        for kk=1:17
+            money_u_1=money_u(kk);
+            for kkk=1:17
+                money_u_2=money_u(kkk);
+                cz_money_u=money_u_2-money_u_1;
+                cz_money_u_sum=[cz_money_u_sum;cz_money_u];
+            end
+        end
+        % NGB
+        cz_ngb_u_sum=[];
+        for kk=1:17
+            ngb_u_1=ngb_u(kk);
+            for kkk=1:17
+                ngb_u_2=ngb_u(kkk);
+                cz_ngb_u=ngb_u_2-ngb_u_1;
+                cz_ngb_u_sum=[cz_ngb_u_sum;cz_ngb_u];
+            end
+        end
+
+        cz_GHG_u_sum=[];
+        for kk=1:17
+            GHG_u_1=GHG_u(kk);
+            for kkk=1:17
+                GHG_u_2=GHG_u(kkk);
+                cz_GHG_u=GHG_u_2-GHG_u_1;
+                cz_GHG_u_sum=[cz_GHG_u_sum;cz_GHG_u];
+            end
+        end
+        % tobacco
+        cz_yield_tobacco_sum=[];
+        for kk=1:17
+            yield_tobacco_1=yield_tobacco(kk);
+            for kkk=1:17
+                yield_tobacco_2=yield_tobacco(kkk);
+                cz_yield_tobacco=yield_tobacco_2-yield_tobacco_1;
+                cz_yield_tobacco_sum=[cz_yield_tobacco_sum;cz_yield_tobacco];
+            end
+        end
+        % cotton
+        cz_yield_cotton_sum=[];
+        for kk=1:17
+            yield_cotton_1=yield_cotton(kk);
+            for kkk=1:17
+                yield_cotton_2=yield_cotton(kkk);
+                cz_yield_cotton=yield_cotton_2-yield_cotton_1;
+                cz_yield_cotton_sum=[cz_yield_cotton_sum;cz_yield_cotton];
+            end
+        end
+
+       ubsum=[];
+       for kk=1:17
+           sow_area1=sow_area(kk);
+           for kkk=1:17
+               sow_area2=sow_area1;
+               ubsum=[ubsum;sow_area2];
+           end
+       end
+       ubsum(ubsum>cropland_total_area)=cropland_total_area;
+       
+
+       area_xs_sum_total=[];
+       for kkk=1:17
+           area_xs_sum=[];
+           for kk=1:17
+                area_xs=zeros(17,1)';
+                area_xs(kkk)=1;
+                area_xs_sum=[area_xs_sum,area_xs];
+           end
+           area_xs_sum_total=[area_xs_sum_total;area_xs_sum];
+       end
+      area_total_max=sow_area.*20;
+      area_total_max( area_total_max>cropland_total_area)=cropland_total_area; % 优化后的每种作物的面积限制
+      
+      crop_xl_sum=[];
+      for kk=1:17
+          crop_xl=[zeros(17,1)+kk,[1:17]'];
+          crop_xl_sum=[crop_xl_sum;crop_xl];
+      end
+        if cropland_total_area>0
+            sy_sow=find(sow_area>0);
+            if length(sy_sow)>=2
+                vsum=[];
+                for kk=1:length(sy_sow);
+                    for kkk=1:length(sy_sow);
+                        v=[sy_sow(kk) sy_sow(kkk)];
+                         vsum=[ vsum;v];
+                    end
+                end
+                
+                syzsum=[]; % 
+                for kk=1:length(vsum)
+                    syz=find(crop_xl_sum(:,1)==vsum(kk,1) & crop_xl_sum(:,2)==vsum(kk,2));
+                    syzsum=[syzsum;syz];
+                end
+                
+                cz_ngb_u_sum=cz_ngb_u_sum(syzsum); % 
+                cz_kal_oil_sum=cz_kal_oil_sum(syzsum);
+                cz_yield_cotton_sum=cz_yield_cotton_sum(syzsum);
+                cz_kal_sugar_sum=cz_kal_sugar_sum(syzsum);
+                cz_pro_xs_sum=cz_pro_xs_sum(syzsum);
+                cz_money_u_sum=cz_money_u_sum(syzsum);
+                cz_yield_tobacco_sum=cz_yield_tobacco_sum(syzsum);
+                cz_GHG_u_sum=cz_GHG_u_sum(syzsum);
+                cz_ir_u_sum=cz_ir_u_sum(syzsum);
+                
+                area_xs_sum_total=area_xs_sum_total(sy_sow,syzsum);
+                area_total_max=area_total_max(sy_sow);
+                
+                fitnessfcn = @(x)(sum(cz_ngb_u_sum));
+                nvars =length(vsum); 
+                lb = zeros(length(vsum),1); % 
+                Aeq=zeros(1,length(vsum))+1;
+                beq=[cropland_total_area]; % 
+                A=[-1.* cz_kal_oil_sum';-1.*cz_yield_cotton_sum';-1.*cz_kal_sugar_sum';-1.*cz_pro_xs_sum';-1.*cz_money_u_sum';cz_yield_tobacco_sum';cz_GHG_u_sum';cz_ir_u_sum';cz_ngb_u_sum'];
+               
+                b=[-kal_oil_sum;-cotton_yield_sum;- kal_sugar_sum;-production;-money_all;tobacco_yield_sum;GHG_all;irrigation_all;ngb_all];
+               
+                x01=sow_area(sy_sow);
+                d1sum=[];
+                for kk=1:length(sy_sow)
+                    d1=zeros(length(sy_sow),1);
+                    d1(kk)=x01(kk);
+                    d1sum=[d1sum;d1];
+                end
+                
+                options = optimoptions('fmincon','Display','iter','Algorithm','sqp','MaxFunctionEvaluations',50000000);
+                ub=ubsum(syzsum);
+                x0=d1sum;
+                [x,fval,exitflag] = fmincon(fitnessfcn,x0,A,b,Aeq,beq,lb, ub,[],options);
+                 
+                options = gaoptimset('ParetoFraction',0.05,'PopulationSize',length(vsum)*100,'Generations',length(vsum)*100,'StallGenLimit',80,'TolFun',1e-3,'UseParallel',1);
+                [x,fval,exitflag,output,population,scores] = gamultiobj(fitnessfcn,nvars,A,b,Aeq,beq,lb,ub,options);
+                
+                if exitflag==1
+                    par_jie=[sow_area';x'];
+                    filename=['I:\crop optimi\Prefecture\Solve_',int2str(xlz),'_city.csv'];
+                    csvwrite(filename,par_jie)
+                end
+            end
+        end
+    end
+end
